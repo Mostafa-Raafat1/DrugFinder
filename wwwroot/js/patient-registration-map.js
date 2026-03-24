@@ -1,30 +1,41 @@
-// patient-registration-map.js
+// Leaflet initialization
+var map = L.map('map').setView([51.505, -0.09], 13);
 
-// Check if geolocation is available
-if ('geolocation' in navigator) {
-    navigator.geolocation.getCurrentPosition(success, error);
-} else {
-    alert('Geolocation is not supported by this browser.');
+// Adding tile layer
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+}).addTo(map);
+
+// Geolocation detection
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+        var lat = position.coords.latitude;
+        var lng = position.coords.longitude;
+        var marker = L.marker([lat, lng]).addTo(map);
+        map.setView([lat, lng], 13);
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lng;
+    });
 }
 
-function success(position) {
-    const lat = position.coords.latitude;
-    const lng = position.coords.longitude;
+// Creating a Control for Geocoding
+var geocoder = new L.Control.Geocoder.Nominatim();
+var control = L.Control.geocoder({
+    placeholder: 'Enter a location',
+    onFind: function(results) {
+        if (results.length) {
+            var latLng = results[0].center;
+            L.marker(latLng).addTo(map);
+            map.setView(latLng, 13);
+        }
+    }
+}).addTo(map);
 
-    // Initialize the map (using Leaflet for this example)
-    const map = L.map('map').setView([lat, lng], 13);
-
-    // Load the tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-    }).addTo(map);
-
-    // Marker for user's location
-    const marker = L.marker([lat, lng]).addTo(map);
-    marker.bindPopup('<b>You are here!</b>').openPopup();
-}
-
-function error() {
-    alert('Unable to retrieve your location.');
-}
+// Adding click handler to place markers
+map.on('click', function(e) {
+    var lat = e.latlng.lat;
+    var lng = e.latlng.lng;
+    L.marker([lat, lng]).addTo(map);
+    document.getElementById('latitude').value = lat;
+    document.getElementById('longitude').value = lng;
+});
