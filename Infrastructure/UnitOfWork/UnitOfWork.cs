@@ -43,20 +43,25 @@ namespace Infrastructure.UnitOfWork
 
         public async Task<int> SaveChangesAsync()
         {
+            // Save entities first
             var result = await dbContext.SaveChangesAsync();
 
-            // Dispatch DomainEvents after Saving
-            var domainEvents = dbContext.ChangeTracker
+            // Find entities with domain events
+            var entitiesWithEvents = dbContext.ChangeTracker
                 .Entries<Entity_>()
                 .Select(e => e.Entity)
                 .Where(e => e.DomainEvents.Any())
                 .ToList();
 
-            foreach (var entity in domainEvents)
+            // Dispatch events and clear them
+            foreach (var entity in entitiesWithEvents)
             {
-                foreach (var domainEvent in entity.DomainEvents)
+                var events = entity.DomainEvents.ToList();
+                entity.ClearDomainEvents(); // important!
+
+                foreach (var domainEvent in events)
                 {
-                    await dispatcher.DispatchAsync(domainEvent);
+                    await dispatcher.DispatchAsync((dynamic)domainEvent);
                 }
             }
 

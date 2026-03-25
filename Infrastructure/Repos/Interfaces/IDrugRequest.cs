@@ -10,5 +10,6 @@ namespace Infrastructure.Repos.Interfaces
 {
     public interface IDrugRequest : IRepo<DrugRequest>
     {
+        Task<DrugRequest> getDrugRequestByDomainId(Guid domainId);
     }
 }

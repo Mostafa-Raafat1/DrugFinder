@@ -2,6 +2,7 @@
 using Infrastructure.Persistence.DbContext;
 using Infrastructure.Repos.Common;
 using Infrastructure.Repos.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,11 @@ namespace Infrastructure.Repos.Implementations
         public NotificationRepo(AppDbContext dbContext) : base(dbContext)
         {
             this.dbContext = dbContext;
+        }
+
+        public async Task<List<Notification>> GetNotificationsForPharmacy(int PhId)
+        {
+            return await dbContext.Notifications.Where(n => n.PharmacyId == PhId).ToListAsync();
         }
     }
 }

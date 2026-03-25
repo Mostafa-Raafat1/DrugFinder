@@ -2,9 +2,11 @@
 using Application.DTO;
 using Application.Identity;
 using Application.Services;
+using Application.UserContext;
 using Domain.Entity;
 using Domain.Value_Object;
 using Infrastructure.UnitOfWork;
+using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,12 +19,35 @@ namespace Infrastructure.Services
     {
         private readonly IUnitOfWork uow;
         private readonly IUserService userService;
+        private readonly INotificationService notificationService;
+        private readonly IUserContext userContext;
 
-        public PharmacyService(IUnitOfWork uow, IUserService userService)
+        public PharmacyService(IUnitOfWork uow, IUserService userService,
+            INotificationService notificationService, IUserContext userContext)
         {
             this.uow = uow;
             this.userService = userService;
+            this.notificationService = notificationService;
+            this.userContext = userContext;
         }
+
+        public async Task<Result<List<GetNotificationDTO>>> GetNotificationsForPharmacyAsync()
+        {
+            var pharmacy = await uow.Pharmacy.GetPharmacyByUserIdAsync(userContext.UserId);
+            if (pharmacy == null)
+            {
+                return Result<List<GetNotificationDTO>>.Failure("Pharmacy not found");
+            }
+
+            var notificationsResult = await notificationService.getNotificationForPharmacyAsync(pharmacy.DBId);
+            if (!notificationsResult.IsSuccess)
+            {
+                return Result<List<GetNotificationDTO>>.Failure(notificationsResult.Error);
+            }
+
+            return Result<List<GetNotificationDTO>>.Success(notificationsResult.Value);
+        }
+
         public async Task<Result> RegisterPharmacyAsync(RegisterPharmacyDTO pharmacyDTO)
         {
 

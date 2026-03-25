@@ -9,9 +9,9 @@ namespace Domain.DomainEvent.Events
 {
     public class DrugRequestedCreatedEvent : IDomainEvent
     {
-        public int RequestId { get;}
-        public int PatientId { get; }
-        public DrugRequestedCreatedEvent(int RID, int PID)
+        public Guid RequestId { get;}
+        public Guid PatientId { get; }
+        public DrugRequestedCreatedEvent(Guid RID, Guid PID)
         {
             RequestId = RID;
             PatientId = PID;

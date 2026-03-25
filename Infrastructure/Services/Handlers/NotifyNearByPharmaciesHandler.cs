@@ -25,8 +25,8 @@ namespace Application.Event.Handlers
         public async Task Handle(DrugRequestedCreatedEvent domainEvent)
         {
             // Get the drug request details and patient information to include in the notification message
-            var Request = await uow.DrugRequest.getById(domainEvent.RequestId);
-            var patient = await  uow.Patient.getById(domainEvent.PatientId);
+            var Request = await uow.DrugRequest.getDrugRequestByDomainId(domainEvent.RequestId);
+            var patient = await  uow.Patient.getPatientByDomainId(domainEvent.PatientId);
             string Message = $"A new drug request has been created for drug ID: {Request.Id}, Patient Name: {patient.FName} {patient.SName}. Please check the request details and respond accordingly.";
             // Get Nearby Pharmacies and send them the notification
 

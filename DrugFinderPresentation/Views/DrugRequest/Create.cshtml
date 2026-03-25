@@ -1,0 +1,94 @@
+@using DrugFinderMVC.Models
+@model CreateDrugRequestViewModel
+@{
+    ViewData["Title"] = "New Drug Request";
+    Layout = "_Layout";
+}
+
+<div class="df-form-page" style="background:linear-gradient(160deg,#0d1b2a 0%,#102333 100%);">
+    <div class="container">
+        <div class="df-form-card df-form-card-wide mx-auto">
+            <div class="df-form-header">
+                <div class="form-icon">
+                    <i class="fa-solid fa-prescription-bottle-medical"></i>
+                </div>
+                <h2>New Drug Request</h2>
+                <p>List the medications you need — nearby pharmacies will be notified instantly</p>
+            </div>
+            <form asp-action="Create" asp-controller="DrugRequest" method="post" id="drugForm">
+                @Html.AntiForgeryToken()
+
+                <div id="drugsContainer">
+                    @for (int i = 0; i < Model.Drugs.Count; i++)
+                    {
+                        <div class="drug-item-card" data-index="@i">
+                            <div class="drug-item-header">
+                                <span class="drug-item-num">Drug #<span class="item-num">@(i + 1)</span></span>
+                                <button type="button" class="btn-remove-drug" title="Remove">
+                                    <i class="fa-solid fa-trash-can"></i> Remove
+                                </button>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <label class="df-label">Drug Name <span style="color:var(--coral);">*</span></label>
+                                    <input name="Drugs[@i].DrugName" class="df-input" placeholder="e.g. Paracetamol" required />
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="df-label">Strength</label>
+                                    <input name="Drugs[@i].Strength" class="df-input" placeholder="e.g. 500mg" />
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="df-label">Form <span style="color:var(--coral);">*</span></label>
+                                    <select name="Drugs[@i].Form" class="df-input" required>
+                                        <option value="">Select form…</option>
+                                        <option value="1">Tablet</option>
+                                        <option value="2">Capsule</option>
+                                        <option value="3">Syrup</option>
+                                        <option value="4">Injection</option>
+                                        <option value="5">Cream</option>
+                                        <option value="6">Drops</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="df-label">Quantity <span style="color:var(--coral);">*</span></label>
+                                    <input name="Drugs[@i].Quantity" class="df-input" type="number"
+                                           min="1" placeholder="e.g. 2" required />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <button type="button" class="btn-add-drug" id="addDrugBtn">
+                    <i class="fa-solid fa-plus"></i> Add Another Drug
+                </button>
+
+                <!-- Summary bar -->
+                <div id="requestSummary" class="mt-4 p-3"
+                     style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;display:none;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-circle-check" style="color:var(--success);"></i>
+                        <span style="font-weight:600;font-size:.9rem;color:#065f46;">
+                            Ready to submit <span id="drugCount">0</span> drug(s) — nearby pharmacies will be notified
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3" style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;">
+                    <p class="mb-0" style="font-size:.85rem;color:#1e40af;">
+                        <i class="fa-solid fa-bell me-1"></i>
+                        <strong>How it works:</strong> When you submit this request, all pharmacies within <strong>3 km</strong> of your registered location will receive an instant notification.
+                    </p>
+                </div>
+
+                <button type="submit" class="df-btn-submit mt-4" id="submitBtn">
+                    <i class="fa-solid fa-paper-plane me-2"></i>Submit Drug Request
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/drug-request-create.js"></script>
+}
