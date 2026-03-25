@@ -15,9 +15,12 @@
                 <h2>Patient Registration</h2>
                 <p>Create your account and start finding medications near you</p>
             </div>
+<<<<<<< HEAD
 
             <div asp-validation-summary="All" class="validation-summary-errors" id="valSummary" style="display:none;"></div>
 
+=======
+>>>>>>> origin/Mostafa
             <form asp-action="Register" asp-controller="Patient" method="post" id="regForm">
                 @Html.AntiForgeryToken()
 
@@ -72,13 +75,21 @@
                             <div class="flex-grow-1">
                                 <label asp-for="Latitude" class="df-label" style="font-size:.8rem;">Latitude</label>
                                 <input asp-for="Latitude" class="df-input" id="lat" type="number"
+<<<<<<< HEAD
                                        step="0.000001" placeholder="e.g. 30.0444" />
+=======
+                                       step="0.000001" placeholder="e.g. 30.0444" disabled />
+>>>>>>> origin/Mostafa
                                 <span asp-validation-for="Latitude" class="field-validation-error"></span>
                             </div>
                             <div class="flex-grow-1">
                                 <label asp-for="Longitude" class="df-label" style="font-size:.8rem;">Longitude</label>
                                 <input asp-for="Longitude" class="df-input" id="lng" type="number"
+<<<<<<< HEAD
                                        step="0.000001" placeholder="e.g. 31.2357" />
+=======
+                                       step="0.000001" placeholder="e.g. 31.2357" disabled />
+>>>>>>> origin/Mostafa
                                 <span asp-validation-for="Longitude" class="field-validation-error"></span>
                             </div>
                         </div>
@@ -107,5 +118,11 @@
 </div>
 
 @section Scripts {
+<<<<<<< HEAD
     <script src="~/js/pages/patient-register.js"></script>
 }
+=======
+    <script src="~/js/patient-register.js"></script>
+}
+
+>>>>>>> origin/Mostafa

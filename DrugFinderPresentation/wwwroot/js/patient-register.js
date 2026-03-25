@@ -2,7 +2,11 @@
  * patient-register.js — DrugFinder Patient Registration Page
  * Handles: GPS geolocation, coordinate validation,
  *          password strength meter, validation feedback,
+<<<<<<< HEAD
  *          form submit loading state
+=======
+ *          submit loading state (only fires when form is valid)
+>>>>>>> origin/Mostafa
  */
 
 $(function () {
@@ -13,7 +17,11 @@ $(function () {
     $('.df-form-card').css({ opacity: 1, transform: 'translateY(0)' });
   }, 60);
 
+<<<<<<< HEAD
   /* ── Validation summary ─────────────────────────────────── */
+=======
+  /* ── Validation summary (server-side errors on page load) ─ */
+>>>>>>> origin/Mostafa
   var summary = $('#valSummary');
   if (summary.find('li').length) summary.fadeIn(300);
 
@@ -31,12 +39,16 @@ $(function () {
   });
 
   /* ── Password strength meter ────────────────────────────── */
+<<<<<<< HEAD
   var strengthBar = $('<div>')
     .attr('id', 'strengthBar')
     .css({
       height: '4px', borderRadius: '4px', marginTop: '6px',
       background: '#e5e7eb', overflow: 'hidden'
     });
+=======
+  var strengthBar  = $('<div>').css({ height: '4px', borderRadius: '4px', marginTop: '6px', background: '#e5e7eb', overflow: 'hidden' });
+>>>>>>> origin/Mostafa
   var strengthFill = $('<div>').css({ height: '100%', width: '0%', transition: 'width .3s ease, background .3s ease', borderRadius: '4px' });
   strengthBar.append(strengthFill);
 
@@ -133,18 +145,26 @@ $(function () {
   });
 
   function showFieldError(input, msg) {
+<<<<<<< HEAD
     var existingErr = input.next('.inline-err');
     if (!existingErr.length) {
+=======
+    if (!input.next('.inline-err').length) {
+>>>>>>> origin/Mostafa
       $('<small class="inline-err field-validation-error">' + msg + '</small>').insertAfter(input);
     }
   }
 
+<<<<<<< HEAD
   /* Clear inline coord errors on input */
+=======
+>>>>>>> origin/Mostafa
   $('#lat, #lng').on('input', function () {
     $(this).removeClass('is-invalid').css('border-color', 'var(--teal)');
     $(this).next('.inline-err').remove();
   });
 
+<<<<<<< HEAD
   /* ── Submit loading state ───────────────────────────────── */
   $('#regForm').on('submit', function () {
     var btn = $(this).find('.df-btn-submit');
@@ -152,4 +172,30 @@ $(function () {
        .html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Creating Account…');
   });
 
+=======
+  /* ── Submit: only disable button when form is actually valid */
+  var submitBtn = $('#regForm .df-btn-submit');
+  var originalLabel = submitBtn.html();
+
+  $('#regForm').on('submit', function (e) {
+    var form = $(this);
+
+    /* Ask jQuery Validate if the form is valid before we do anything */
+    var validator = form.data('validator');
+    if (validator && !form.valid()) {
+      /* Validation failed — do nothing; let unobtrusive show errors */
+      return;
+    }
+
+    /* Form is valid — safe to show loading state */
+    submitBtn.prop('disabled', true)
+             .html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Creating Account…');
+  });
+
+  /* Re-enable button if the server returns a validation error (page reload) */
+  if (summary.find('li').length) {
+    submitBtn.prop('disabled', false).html(originalLabel);
+  }
+
+>>>>>>> origin/Mostafa
 });

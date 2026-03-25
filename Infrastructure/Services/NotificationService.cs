@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.DTO;
 using Domain.Entity;
 using Domain.Factory;
 using Domain.Value_Object;
@@ -18,6 +19,24 @@ namespace Application.Services
         public NotificationService(IUnitOfWork Uow)
         {
             uow = Uow;
+        }
+
+        public async Task<Result<List<GetNotificationDTO>>> getNotificationForPharmacyAsync(int PhId)
+        {
+            var notfications = await uow.Notification.GetNotificationsForPharmacy(PhId);
+            if (notfications == null || notfications.Count == 0)
+            {
+                return Result<List<GetNotificationDTO>>.Failure("No notifications found yet");
+            }
+
+            var notificationDTOs = notfications.Select(n => new GetNotificationDTO
+            {
+                Message = n.Message,
+                CreatedAt = n.CreatedAt,
+                IsRead = n.IsRead
+            }).ToList();
+
+            return Result<List<GetNotificationDTO>>.Success(notificationDTOs);
         }
 
         public async Task<Result> SendNotificationToNearbyPharmaciesAsync(Location location, string Message)

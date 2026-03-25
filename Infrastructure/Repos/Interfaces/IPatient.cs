@@ -11,5 +11,6 @@ namespace Infrastructure.Repos.Interfaces
     public interface IPatient : IRepo<Patient>
     {
         Patient getPatientByUserAppId(string appUserId);
+        Task<Patient> getPatientByDomainId(Guid domainId);
     }
 }

@@ -2,7 +2,11 @@
  * pharmacy-register.js — DrugFinder Pharmacy Registration Page
  * Handles: GPS geolocation, licence number formatting,
  *          password match indicator, validation feedback,
+<<<<<<< HEAD
  *          submit loading state
+=======
+ *          submit loading state (only fires when form is valid)
+>>>>>>> origin/Mostafa
  */
 
 $(function () {
@@ -13,7 +17,11 @@ $(function () {
     $('.df-form-card').css({ opacity: 1, transform: 'translateY(0)' });
   }, 60);
 
+<<<<<<< HEAD
   /* ── Validation summary ─────────────────────────────────── */
+=======
+  /* ── Validation summary (server-side errors on page load) ─ */
+>>>>>>> origin/Mostafa
   var summary = $('#valSummary');
   if (summary.find('li').length) summary.fadeIn(300);
 
@@ -151,6 +159,7 @@ $(function () {
     }
   });
 
+<<<<<<< HEAD
   /* ── Submit loading state ───────────────────────────────── */
   $('form').on('submit', function () {
     var btn = $(this).find('.df-btn-submit');
@@ -158,4 +167,30 @@ $(function () {
        .html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Registering Pharmacy…');
   });
 
+=======
+  /* ── Submit: only disable button when form is actually valid */
+  var submitBtn = $('form .df-btn-submit');
+  var originalLabel = submitBtn.html();
+
+  $('form').on('submit', function (e) {
+    var form = $(this);
+
+    /* Ask jQuery Validate if the form is valid before we do anything */
+    var validator = form.data('validator');
+    if (validator && !form.valid()) {
+      /* Validation failed — do nothing; let unobtrusive show errors */
+      return;
+    }
+
+    /* Form is valid — safe to show loading state */
+    submitBtn.prop('disabled', true)
+             .html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Registering Pharmacy…');
+  });
+
+  /* Re-enable if server returned errors (page reloaded with model errors) */
+  if (summary.find('li').length) {
+    submitBtn.prop('disabled', false).html(originalLabel);
+  }
+
+>>>>>>> origin/Mostafa
 });

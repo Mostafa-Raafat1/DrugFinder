@@ -28,5 +28,10 @@ namespace Infrastructure.Repos.Implementations
                 .OrderBy(p => p.Location.Point.Distance(location.Point))
                 .ToListAsync();
         }
+
+        public async Task<Pharmacy> GetPharmacyByUserIdAsync(string userId)
+        {
+            return await dbContext.Pharmacies.FirstOrDefaultAsync(p => p.AppUserId == userId);
+        }
     }
 }

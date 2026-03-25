@@ -2,6 +2,7 @@
 using Infrastructure.Persistence.DbContext;
 using Infrastructure.Repos.Common;
 using Infrastructure.Repos.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,11 @@ namespace Infrastructure.Repos.Implementations
         public PatientRepo(AppDbContext dbContext) : base(dbContext)
         {
             this.dbContext = dbContext;
+        }
+
+        public async Task<Patient> getPatientByDomainId(Guid domainId)
+        {
+            return await dbContext.Patients.FirstOrDefaultAsync(p => p.Id == domainId);
         }
 
         public Patient getPatientByUserAppId(string appUserId)

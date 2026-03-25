@@ -53,7 +53,7 @@ namespace Infrastructure.Services
                     drug.Quantity
                 ));
             }
-            var drugRequest = new DrugRequest(drugRequestDetails, patient.DBId);
+            var drugRequest = new DrugRequest(drugRequestDetails, patient.DBId, patient.Id);
 
             uow.DrugRequest.Create(drugRequest);
 

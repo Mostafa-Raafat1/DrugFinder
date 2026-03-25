@@ -22,7 +22,7 @@ namespace Domain.Entity
 
         private DrugRequest() { } // For EF Core
 
-        public DrugRequest(List<DrugDetails> drugDetails, int pId)
+        public DrugRequest(List<DrugDetails> drugDetails, int pId, Guid pDomainId)
         {
             Id = Guid.NewGuid();
             DrugDetails = drugDetails;
@@ -31,7 +31,7 @@ namespace Domain.Entity
             Status = Status.Pending;
 
             // Raise an Event
-            AddDomainEvent(new DrugRequestedCreatedEvent(DBId, PatientId));
+            AddDomainEvent(new DrugRequestedCreatedEvent(Id, pDomainId));
         }
 
     }

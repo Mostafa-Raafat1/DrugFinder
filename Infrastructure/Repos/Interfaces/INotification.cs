@@ -10,5 +10,6 @@ namespace Infrastructure.Repos.Interfaces
 {
     public interface INotification : IRepo<Notification>
     {
+        Task<List<Notification>> GetNotificationsForPharmacy(int PhId);
     }
 }

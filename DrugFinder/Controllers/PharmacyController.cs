@@ -1,4 +1,5 @@
 ﻿using Application.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -31,6 +32,18 @@ namespace DrugFinder.Controllers
                 return BadRequest(result.Error);
             }
             return Ok("Pharmacy registered successfully.");
+        }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Pharmacy")]
+        [HttpGet("GetNotfications")]
+        public async Task<IActionResult> GetNotificationsForPharmacy()
+        {
+            var result = await pharmacyService.GetNotificationsForPharmacyAsync();
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+            return Ok(result.Value);
         }
     }
 }

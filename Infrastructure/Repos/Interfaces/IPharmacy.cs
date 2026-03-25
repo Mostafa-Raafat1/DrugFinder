@@ -13,5 +13,6 @@ namespace Infrastructure.Repos.Interfaces
     public interface IPharmacy : IRepo<Pharmacy>
     {
         public Task<List<Pharmacy>> GetNearByPharmacies(Location location, double radiueMeters);
+        public Task<Pharmacy> GetPharmacyByUserIdAsync(string userId);
     }
 }
