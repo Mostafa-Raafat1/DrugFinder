@@ -1,0 +1,313 @@
+@using DrugFinderMVC.Models
+@model List<NotificationViewModel>
+@{
+    ViewData["Title"] = "My Notifications";
+    Layout = "_Layout";
+    int unreadCount = Model.Count(n => !n.IsRead);
+}
+
+<div class="notif-page">
+    <div class="container py-5">
+
+        <!-- ── Page header ── -->
+        <div class="notif-header mb-4">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <div class="notif-header-icon">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div>
+                    <h1 class="mb-0" style="font-size:1.9rem;">Notifications</h1>
+                    <p class="mb-0 text-muted" style="font-size:.9rem;">
+                        Drug requests from patients near your pharmacy
+                    </p>
+                </div>
+                @if (unreadCount > 0)
+                {
+                    <span class="notif-badge ms-auto" id="unreadBadge">
+                        @unreadCount unread
+                    </span>
+                }
+            </div>
+
+            <!-- toolbar -->
+            <div class="notif-toolbar mt-3 d-flex align-items-center gap-2 flex-wrap">
+                <button class="notif-filter-btn active" data-filter="all">All</button>
+                <button class="notif-filter-btn" data-filter="unread">Unread</button>
+                <button class="notif-filter-btn" data-filter="read">Read</button>
+                <div class="ms-auto d-flex gap-2">
+                    <button id="markAllReadBtn" class="notif-action-btn"
+                            @(unreadCount == 0 ? "disabled" : "")>
+                        <i class="fa-solid fa-check-double me-1"></i>Mark all read
+                    </button>
+                    <button id="refreshBtn" class="notif-action-btn">
+                        <i class="fa-solid fa-rotate-right me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Notification list ── -->
+        @if (!Model.Any())
+        {
+            <div class="notif-empty" id="emptyState">
+                <div class="notif-empty-icon">
+                    <i class="fa-solid fa-bell-slash"></i>
+                </div>
+                <h3>No notifications yet</h3>
+                <p>When patients near your pharmacy submit drug requests, you'll see them here.</p>
+            </div>
+        }
+        else
+        {
+            <div id="notifList">
+                @foreach (var n in Model.OrderByDescending(x => x.CreatedAt))
+                {
+                    <div class="notif-card @(!n.IsRead ? "notif-unread" : "")"
+                         data-id="@n.DBId"
+                         data-read="@n.IsRead.ToString().ToLower()">
+
+                        <div class="notif-card-left">
+                            <div class="notif-dot @(!n.IsRead ? "dot-active" : "")"></div>
+                        </div>
+
+                        <div class="notif-card-body">
+                            <div class="notif-card-top">
+                                <span class="notif-type-tag">
+                                    <i class="fa-solid fa-prescription-bottle-medical me-1"></i>Drug Request
+                                </span>
+                                <span class="notif-time">
+                                    <i class="fa-regular fa-clock me-1"></i>
+                                    @n.CreatedAt.ToString("dd MMM yyyy · HH:mm")
+                                </span>
+                            </div>
+                            <p class="notif-message">@n.Message</p>
+                            <div class="notif-card-footer">
+                                @if (!n.IsRead)
+                                {
+                                    <button class="btn-mark-read" data-id="@n.DBId">
+                                        Mark as read
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="notif-read-label">
+                                        <i class="fa-solid fa-circle-check me-1"></i>Read
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- empty state shown when filter matches nothing -->
+            <div id="filterEmpty" class="notif-empty" style="display:none;">
+                <div class="notif-empty-icon" style="font-size:2rem;">
+                    <i class="fa-solid fa-filter-circle-xmark"></i>
+                </div>
+                <h3>No notifications match this filter</h3>
+                <p>Try switching to "All" to see everything.</p>
+            </div>
+        }
+
+    </div>
+</div>
+
+@section Styles {
+<style>
+/* ── Notifications page styles ──────────────────────────── */
+.notif-page { background: var(--warm-white); min-height: 80vh; }
+
+.notif-header-icon {
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+  border-radius: 14px;
+  display: grid; place-items: center;
+  color: #fff; font-size: 1.3rem;
+  box-shadow: 0 6px 18px rgba(15,163,177,.3);
+}
+
+.notif-badge {
+  background: var(--coral);
+  color: #fff;
+  border-radius: 30px;
+  padding: .3rem .9rem;
+  font-size: .8rem;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  letter-spacing: .03em;
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+@@keyframes pulse-badge {
+  0%,100% { box-shadow: 0 0 0 0 rgba(244,91,105,.4); }
+  50%      { box-shadow: 0 0 0 8px rgba(244,91,105,0); }
+}
+
+/* toolbar */
+.notif-filter-btn {
+  background: none;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: .35rem .85rem;
+  font-size: .83rem;
+  font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all .18s;
+}
+.notif-filter-btn:hover,
+.notif-filter-btn.active {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
+}
+.notif-action-btn {
+  background: none;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: .35rem .85rem;
+  font-size: .83rem;
+  font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all .18s;
+}
+.notif-action-btn:hover:not([disabled]) {
+  border-color: var(--navy);
+  color: var(--navy);
+}
+.notif-action-btn[disabled] { opacity: .4; cursor: not-allowed; }
+
+/* cards */
+.notif-card {
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: var(--radius);
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem 1.4rem;
+  margin-bottom: .75rem;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+  animation: slideDown .3s ease;
+}
+@@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.notif-card:hover {
+  border-color: var(--teal);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(3px);
+}
+.notif-card.notif-unread {
+  border-color: rgba(15,163,177,.35);
+  background: linear-gradient(135deg, #f0fdfe 0%, #fff 60%);
+}
+
+/* left dot column */
+.notif-card-left { padding-top: .3rem; flex-shrink: 0; }
+.notif-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  transition: background .2s;
+}
+.notif-dot.dot-active {
+  background: var(--teal);
+  box-shadow: 0 0 0 3px rgba(15,163,177,.2);
+}
+
+/* body */
+.notif-card-body { flex: 1; min-width: 0; }
+.notif-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .5rem;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+.notif-type-tag {
+  font-size: .75rem;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  color: var(--teal);
+  background: rgba(15,163,177,.1);
+  border-radius: 6px;
+  padding: .2rem .55rem;
+  letter-spacing: .03em;
+}
+.notif-time {
+  font-size: .78rem;
+  color: var(--gray-400);
+}
+.notif-message {
+  font-size: .93rem;
+  color: var(--gray-700);
+  line-height: 1.55;
+  margin-bottom: .6rem;
+  word-break: break-word;
+}
+.notif-card-footer { display: flex; align-items: center; gap: .75rem; }
+.btn-mark-read {
+  background: none;
+  border: 1.5px solid var(--teal);
+  color: var(--teal);
+  border-radius: 7px;
+  padding: .25rem .7rem;
+  font-size: .78rem;
+  font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  cursor: pointer;
+  transition: all .18s;
+}
+.btn-mark-read:hover {
+  background: var(--teal);
+  color: #fff;
+}
+.notif-read-label {
+  font-size: .78rem;
+  color: var(--success);
+  font-weight: 600;
+}
+
+/* empty state */
+.notif-empty {
+  text-align: center;
+  padding: 5rem 2rem;
+}
+.notif-empty-icon {
+  width: 80px; height: 80px;
+  background: var(--gray-100);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem;
+  font-size: 2.2rem;
+  color: var(--gray-400);
+}
+.notif-empty h3 {
+  font-size: 1.3rem;
+  color: var(--navy);
+  margin-bottom: .5rem;
+}
+.notif-empty p {
+  color: var(--gray-400);
+  font-size: .9rem;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+/* spinner overlay for refresh */
+.notif-loading {
+  text-align: center;
+  padding: 3rem;
+  color: var(--gray-400);
+}
+</style>
+}
+
+@section Scripts {
+    <script src="~/js/pages/notifications.js"></script>
+}
