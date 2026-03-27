@@ -79,6 +79,11 @@ namespace Infrastructure.Migrations
                     b.Property<int>("PatientId")
                         .HasColumnType("int");
 
+                    b.Property<string>("PatientName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("PatientName");
+
                     b.Property<DateTime>("RequestTime")
                         .HasColumnType("datetime2")
                         .HasColumnName("RequestTime");
@@ -493,7 +498,28 @@ namespace Infrastructure.Migrations
                                 .HasForeignKey("DrugRequestDBId");
                         });
 
+                    b.OwnsOne("Domain.Value_Object.Location", "Location", b1 =>
+                        {
+                            b1.Property<int>("DrugRequestDBId")
+                                .HasColumnType("int");
+
+                            b1.Property<Point>("Point")
+                                .IsRequired()
+                                .HasColumnType("geography")
+                                .HasColumnName("Location");
+
+                            b1.HasKey("DrugRequestDBId");
+
+                            b1.ToTable("DrugRequests");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DrugRequestDBId");
+                        });
+
                     b.Navigation("DrugDetails");
+
+                    b.Navigation("Location")
+                        .IsRequired();
 
                     b.Navigation("Patient");
                 });
@@ -605,12 +631,47 @@ namespace Infrastructure.Migrations
                                 .HasForeignKey("PharmacyResponseDBId");
                         });
 
+                    b.OwnsMany("Domain.ValueObject.PharmacyResponseItem", "ResponseItems", b1 =>
+                        {
+                            b1.Property<int>("PharmacyResponseDBId")
+                                .HasColumnType("int");
+
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int");
+
+                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
+
+                            b1.Property<bool>("Available")
+                                .HasColumnType("bit")
+                                .HasColumnName("Available");
+
+                            b1.Property<string>("DrugName")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("DrugName");
+
+                            b1.Property<decimal?>("Price")
+                                .IsRequired()
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("Price");
+
+                            b1.HasKey("PharmacyResponseDBId", "Id");
+
+                            b1.ToTable("PharmacyResponseItems", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("PharmacyResponseDBId");
+                        });
+
                     b.Navigation("DrugRequest");
 
                     b.Navigation("Pharmacy");
 
                     b.Navigation("Price")
                         .IsRequired();
+
+                    b.Navigation("ResponseItems");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -13,7 +13,7 @@ namespace DrugFinder.Controllers
     {
         private readonly IDrugRequestService drugRequestService;
 
-        public DrugRequestController(IDrugRequestService drugRequestService )
+        public DrugRequestController(IDrugRequestService drugRequestService)
         {
             this.drugRequestService = drugRequestService;
         }
@@ -32,6 +32,18 @@ namespace DrugFinder.Controllers
                 return BadRequest(result.Error);
             }
             return Ok("Drug request created successfully.");
+        }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Patient")]
+        [HttpGet("GetRequestsByPatiendId")]
+        public async Task<IActionResult> GetRequestsByPatientId()
+        {
+            var result = await drugRequestService.GetDrugRequestsByPatientIdAsync();
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+            return Ok(result.Value);
         }
     }
 }

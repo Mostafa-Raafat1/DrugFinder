@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Value_Object
 {
-    public class LicenseNumber : ValueObject
+    public class LicenseNumber : ValueObject_
     {
         public string Number { get; private set; }
 

@@ -35,6 +35,24 @@ $(function () {
     $(this).val($(this).val().trim().toUpperCase());
   });
 
+  /* ── Fix: jQuery Validate ignores type=number empty values  -
+     Force it to treat an empty number input as invalid      */
+  $.validator.methods.number = (function (original) {
+    return function (value, element) {
+      if ($(element).attr("type") === "number" && value === "") return false;
+      return original.call(this, value, element);
+    };
+  })($.validator.methods.number);
+
+  $.validator.methods.required = (function (original) {
+    return function (value, element) {
+      if ($(element).attr("type") === "number") {
+        return value !== "" && value !== null && value !== undefined;
+      }
+      return original.call(this, value, element);
+    };
+  })($.validator.methods.required);
+
   /* ── Password strength meter ────────────────────────────── */
   var strengthBar  = $('<div>').css({ height: '4px', borderRadius: '4px', marginTop: '6px', background: '#e5e7eb', overflow: 'hidden' });
   var strengthFill = $('<div>').css({ height: '100%', width: '0%', transition: 'width .3s ease, background .3s ease', borderRadius: '4px' });
@@ -115,6 +133,17 @@ $(function () {
     }, 4000);
   }
 
+  /* ── Show red immediately when lat/lng left empty on blur ── */
+  $('#lat, #lng').on('blur', function () {
+    if ($(this).val() === '' || $(this).val() === null) {
+      $(this).addClass('is-invalid').css('border-color', 'var(--coral)');
+    }
+  }).on('input', function () {
+    $(this).removeClass('is-invalid').css('border-color', 'var(--teal)');
+    $(this).next('.coord-err').remove();
+    $('[data-valmsg-for="Latitude"], [data-valmsg-for="Longitude"]').text('');
+  });
+
   /* ── Coordinate range validation on blur ────────────────── */
   $('#lat').on('blur', function () {
     var v = parseFloat($(this).val());
@@ -137,11 +166,6 @@ $(function () {
       $('<small class="coord-err field-validation-error">' + msg + '</small>').insertAfter(input);
     }
   }
-
-  $('#lat, #lng').on('input', function () {
-    $(this).removeClass('is-invalid').css('border-color', 'var(--teal)');
-    $(this).next('.coord-err').remove();
-  });
 
   /* ── Pharmacy name – title-case helper on blur ──────────── */
   $('[name="Name"]').on('blur', function () {

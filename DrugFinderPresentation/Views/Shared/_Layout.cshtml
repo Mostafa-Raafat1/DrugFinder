@@ -22,11 +22,71 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
+<<<<<<< Updated upstream
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                     </ul>
                 </div>
+=======
+                    }
+                    @if (User.IsInRole("Pharmacy"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link notif-nav-link" asp-controller="Pharmacy" asp-action="Notifications"
+                               id="notifNavLink">
+                                <i class="fa-solid fa-bell me-1"></i>Notifications
+                                <span class="notif-nav-dot" id="notifNavDot" style="display:none;"></span>
+                            </a>
+                        </li>
+                    }
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-user-circle me-1"></i>
+                            @User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fa-solid fa-sign-out-alt me-2"></i>Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn df-btn-outline ms-2" asp-controller="Patient" asp-action="Register">
+                            Register as Patient
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn df-btn-primary ms-2" asp-controller="Pharmacy" asp-action="Register">
+                            Register Pharmacy
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert-banner alert-banner-success">
+            <div class="container d-flex align-items-center gap-3">
+                <i class="fa-solid fa-circle-check fa-lg"></i>
+                <span>@TempData["Success"]</span>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+>>>>>>> Stashed changes
             </div>
         </nav>
     </header>

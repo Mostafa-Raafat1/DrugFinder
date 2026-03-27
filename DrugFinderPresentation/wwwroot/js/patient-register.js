@@ -1,34 +1,63 @@
 /**
  * patient-register.js — DrugFinder Patient Registration Page
+<<<<<<< Updated upstream
  * Handles: GPS geolocation, coordinate validation,
  *          password strength meter, validation feedback,
  *          submit loading state (only fires when form is valid)
+=======
+>>>>>>> Stashed changes
  */
 
 $(function () {
 
   /* ── Card entrance ──────────────────────────────────────── */
   $('.df-form-card').css({ opacity: 0, transform: 'translateY(28px)', transition: 'opacity .4s ease, transform .4s ease' });
-  setTimeout(function () {
-    $('.df-form-card').css({ opacity: 1, transform: 'translateY(0)' });
-  }, 60);
+  setTimeout(function () { $('.df-form-card').css({ opacity: 1, transform: 'translateY(0)' }); }, 60);
 
+<<<<<<< Updated upstream
   /* ── Validation summary (server-side errors on page load) ─ */
+=======
+  /* ── Validation summary (server-side errors) ────────────── */
+>>>>>>> Stashed changes
   var summary = $('#valSummary');
   if (summary.find('li').length) summary.fadeIn(300);
 
+  /* ── Highlight server-side invalid fields ───────────────── */
   $('[data-valmsg-for]').each(function () {
     if ($(this).text().trim()) {
       $('[name="' + $(this).attr('data-valmsg-for') + '"]').addClass('is-invalid');
     }
   });
 
-  /* ── Real-time border feedback ──────────────────────────── */
-  $('.df-input').on('input', function () {
-    if ($(this).val().trim()) $(this).removeClass('is-invalid').css('border-color', 'var(--teal)');
+  /* ── Real-time border feedback for all inputs ───────────── */
+  $('.df-input').on('input change', function () {
+    if ($(this).val() !== '' && $(this).val() !== null) {
+      $(this).removeClass('is-invalid').css('border-color', 'var(--teal)');
+    }
   }).on('blur', function () {
-    if (!$(this).hasClass('is-invalid')) $(this).css('border-color', '');
+    if (!$(this).hasClass('is-invalid') && !$(this).hasClass('is-valid')) {
+      $(this).css('border-color', '');
+    }
   });
+
+  /* ── Fix: jQuery Validate ignores type=number empty values  ─
+        Force it to treat an empty number input as invalid      */
+  $.validator.methods.number = (function (original) {
+    return function (value, element) {
+      if ($(element).attr('type') === 'number' && value === '') return false;
+      return original.call(this, value, element);
+    };
+  })($.validator.methods.number);
+
+  /* ── Also make required work for number inputs explicitly ── */
+  $.validator.methods.required = (function (original) {
+    return function (value, element) {
+      if ($(element).attr('type') === 'number') {
+        return value !== '' && value !== null && value !== undefined;
+      }
+      return original.call(this, value, element);
+    };
+  })($.validator.methods.required);
 
   /* ── Password strength meter ────────────────────────────── */
   var strengthBar  = $('<div>').css({ height: '4px', borderRadius: '4px', marginTop: '6px', background: '#e5e7eb', overflow: 'hidden' });
@@ -42,17 +71,16 @@ $(function () {
   pwdInput.closest('.col-sm-6').append(strengthLabel);
 
   pwdInput.on('input', function () {
-    var val = $(this).val();
-    var score = 0;
-    if (val.length >= 6)  score++;
-    if (val.length >= 10) score++;
-    if (/[A-Z]/.test(val)) score++;
-    if (/[0-9]/.test(val)) score++;
+    var val = $(this).val(), score = 0;
+    if (val.length >= 6)          score++;
+    if (val.length >= 10)         score++;
+    if (/[A-Z]/.test(val))        score++;
+    if (/[0-9]/.test(val))        score++;
     if (/[^A-Za-z0-9]/.test(val)) score++;
 
     var pct   = (score / 5) * 100;
     var color = score <= 1 ? '#f45b69' : score <= 3 ? '#f4c842' : '#22c55e';
-    var label = score <= 1 ? 'Weak' : score <= 3 ? 'Moderate' : 'Strong';
+    var label = score <= 1 ? 'Weak'    : score <= 3 ? 'Moderate' : 'Strong';
 
     strengthFill.css({ width: pct + '%', background: color });
     strengthLabel.text(val.length ? 'Password strength: ' + label : '').css('color', color);
@@ -68,10 +96,7 @@ $(function () {
   var gpsBtn = $('#gpsBtn');
 
   gpsBtn.on('click', function () {
-    if (!navigator.geolocation) {
-      showGpsError('Geolocation is not supported by your browser.');
-      return;
-    }
+    if (!navigator.geolocation) { showGpsError('Geolocation is not supported by your browser.'); return; }
 
     gpsBtn.prop('disabled', true)
           .html('<span class="spinner-border spinner-border-sm me-1" role="status"></span> Detecting location…');
@@ -81,19 +106,20 @@ $(function () {
         var lat = pos.coords.latitude.toFixed(6);
         var lng = pos.coords.longitude.toFixed(6);
 
-        $('#lat').val(lat).css('border-color', 'var(--success)').trigger('input');
-        $('#lng').val(lng).css('border-color', 'var(--success)').trigger('input');
+        $('#lat').val(lat).trigger('input').css('border-color', 'var(--success)').removeClass('is-invalid');
+        $('#lng').val(lng).trigger('input').css('border-color', 'var(--success)').removeClass('is-invalid');
+
+        // Clear any validation error messages for these fields
+        $('[data-valmsg-for="Latitude"], [data-valmsg-for="Longitude"]').text('');
 
         gpsBtn.prop('disabled', false)
               .html('<i class="fa-solid fa-circle-check me-1" style="color:var(--success);"></i> Location Detected: ' + lat + ', ' + lng)
               .css({ borderColor: 'var(--success)', color: 'var(--success)' });
       },
       function (err) {
-        var msgs = {
-          1: 'Location access denied. Please allow location access or enter coordinates manually.',
-          2: 'Location unavailable. Please enter coordinates manually.',
-          3: 'Location request timed out. Please try again.'
-        };
+        var msgs = { 1: 'Location access denied. Please enter coordinates manually.',
+                     2: 'Location unavailable. Please enter coordinates manually.',
+                     3: 'Location request timed out.' };
         showGpsError(msgs[err.code] || 'Unable to retrieve location.');
       },
       { timeout: 10000, maximumAge: 0 }
@@ -110,13 +136,12 @@ $(function () {
     }, 4000);
   }
 
-  /* ── Coordinate range validation on blur ────────────────── */
-  $('#lat').on('blur', function () {
-    var v = parseFloat($(this).val());
-    if ($(this).val() && (isNaN(v) || v < -90 || v > 90)) {
-      $(this).addClass('is-invalid');
-      showFieldError($(this), 'Latitude must be between -90 and 90');
+  /* ── Show is-invalid on lat/lng when they lose focus empty ─ */
+  $('#lat, #lng').on('blur', function () {
+    if ($(this).val() === '' || $(this).val() === null) {
+      $(this).addClass('is-invalid').css('border-color', 'var(--coral)');
     }
+<<<<<<< Updated upstream
   });
 
   $('#lng').on('blur', function () {
@@ -134,10 +159,14 @@ $(function () {
   }
 
   $('#lat, #lng').on('input', function () {
+=======
+  }).on('input', function () {
+>>>>>>> Stashed changes
     $(this).removeClass('is-invalid').css('border-color', 'var(--teal)');
     $(this).next('.inline-err').remove();
   });
 
+<<<<<<< Updated upstream
   /* ── Submit: only disable button when form is actually valid */
   var submitBtn = $('#regForm .df-btn-submit');
   var originalLabel = submitBtn.html();
@@ -146,20 +175,24 @@ $(function () {
     var form = $(this);
 
     /* Ask jQuery Validate if the form is valid before we do anything */
-    var validator = form.data('validator');
-    if (validator && !form.valid()) {
-      /* Validation failed — do nothing; let unobtrusive show errors */
-      return;
-    }
+=======
+  /* ── Submit: only disable button when the form is valid ──── */
+  var submitBtn  = $('#regForm .df-btn-submit');
+  var origLabel  = submitBtn.html();
 
-    /* Form is valid — safe to show loading state */
+  $('#regForm').on('submit', function () {
+    var form      = $(this);
+>>>>>>> Stashed changes
+    var validator = form.data('validator');
+    if (validator && !form.valid()) return; // let unobtrusive show errors
+
     submitBtn.prop('disabled', true)
              .html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Creating Account…');
   });
 
-  /* Re-enable button if the server returns a validation error (page reload) */
+  // Re-enable if server returned errors
   if (summary.find('li').length) {
-    submitBtn.prop('disabled', false).html(originalLabel);
+    submitBtn.prop('disabled', false).html(origLabel);
   }
 
 });

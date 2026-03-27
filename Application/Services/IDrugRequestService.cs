@@ -12,5 +12,6 @@ namespace Application.Services
     public interface IDrugRequestService
     {
         Task<Result> CreateDrugRequestAsync(List<CreateDrugRequestDTO> DTO);
+        Task<Result<List<PatientRequestDto>>> GetDrugRequestsByPatientIdAsync();
     }
 }
