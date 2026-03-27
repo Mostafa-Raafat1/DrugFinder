@@ -55,6 +55,16 @@ namespace Infrastructure.Persistence.EntityConfiguration
                      .HasMaxLength(3);
             });
 
+            // Configure the ResponseItems as an owned collection
+            builder.OwnsMany(pr => pr.ResponseItems, pr =>
+            {
+                pr.ToTable("PharmacyResponseItems");
+
+                pr.Property(r => r.DrugName).HasColumnName("DrugName").IsRequired();
+                pr.Property(r => r.Available).HasColumnName("Available").IsRequired();
+                pr.Property(r => r.Price).HasColumnName("Price").IsRequired();
+            });
+
             // Configure the AvailabilityStatus as an enum integer
             builder.Property(pr => pr.AvailabilityStatus)
                    .IsRequired();

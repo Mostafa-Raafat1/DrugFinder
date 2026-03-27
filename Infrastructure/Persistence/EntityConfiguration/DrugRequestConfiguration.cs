@@ -45,6 +45,19 @@ namespace Infrastructure.Persistence.EntityConfiguration
                 dd.Property(d => d.Quantity).HasColumnName("Quantity").IsRequired();
             });
 
+            // Adding Location as an owned entity with spatial data configuration For Fast Queries
+            builder.OwnsOne(p => p.Location, loc =>
+            {
+                loc.Property(l => l.Point)
+                   .HasColumnName("Location")
+                   .HasColumnType("geography");
+            });
+
+            // Adding PatientName property to DrugRequest for easier querying and display in Pharmacy's nearby requests list
+            builder.Property(dr => dr.PatientName)
+                   .HasColumnName("PatientName")
+                   .IsRequired();
+
 
             // Adding RequestTime and Status properties
             builder.Property(dr => dr.RequestTime)

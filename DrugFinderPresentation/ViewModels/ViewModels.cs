@@ -33,11 +33,24 @@ namespace DrugFinderMVC.Models
         [Display(Name = "Confirm Password")]
         public string ConfirmPassword { get; set; } = string.Empty;
 
+<<<<<<< HEAD
         [Required, Range(-90, 90)]
         public double Latitude { get; set; }
 
         [Required, Range(-180, 180)]
         public double Longitude { get; set; }
+=======
+        // Nullable so [Required] fires when the field is left blank (double defaults to 0 otherwise)
+        [Required(ErrorMessage = "Latitude is required")]
+        [Range(-90, 90, ErrorMessage = "Latitude must be between -90 and 90")]
+        [Display(Name = "Latitude")]
+        public double? Latitude { get; set; }
+
+        [Required(ErrorMessage = "Longitude is required")]
+        [Range(-180, 180, ErrorMessage = "Longitude must be between -180 and 180")]
+        [Display(Name = "Longitude")]
+        public double? Longitude { get; set; }
+>>>>>>> origin/Mostafa
     }
 
     // ── Pharmacy ──────────────────────────────────────────────
@@ -64,11 +77,24 @@ namespace DrugFinderMVC.Models
         [Display(Name = "Licence Number")]
         public string LiscenceNumber { get; set; } = string.Empty;
 
+<<<<<<< HEAD
         [Required, Range(-90, 90)]
         public double Latitude { get; set; }
 
         [Required, Range(-180, 180)]
         public double Longitude { get; set; }
+=======
+        // Nullable so [Required] fires when the field is left blank
+        [Required(ErrorMessage = "Latitude is required")]
+        [Range(-90, 90, ErrorMessage = "Latitude must be between -90 and 90")]
+        [Display(Name = "Latitude")]
+        public double? Latitude { get; set; }
+
+        [Required(ErrorMessage = "Longitude is required")]
+        [Range(-180, 180, ErrorMessage = "Longitude must be between -180 and 180")]
+        [Display(Name = "Longitude")]
+        public double? Longitude { get; set; }
+>>>>>>> origin/Mostafa
     }
 
     // ── Drug Request ──────────────────────────────────────────
@@ -93,6 +119,18 @@ namespace DrugFinderMVC.Models
         public List<DrugDetailViewModel> Drugs { get; set; } = new() { new DrugDetailViewModel() };
     }
 
+<<<<<<< HEAD
+=======
+    // ── Notification ──────────────────────────────────────────
+    public class NotificationViewModel
+    {
+        public int DBId { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public bool IsRead { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+>>>>>>> origin/Mostafa
     // ── API Response wrapper ──────────────────────────────────
     public class ApiResult
     {

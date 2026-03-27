@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Value_Object
 {
-    public abstract class ValueObject
+    public abstract class ValueObject_
     {
         protected abstract IEnumerable<object> GetEqualityComponents();
 
@@ -17,7 +17,7 @@ namespace Domain.Value_Object
         {
             if (obj == null || obj.GetType() != GetType())
                 return false;
-            var other = (ValueObject)obj;
+            var other = (ValueObject_)obj;
             return GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
         }
 

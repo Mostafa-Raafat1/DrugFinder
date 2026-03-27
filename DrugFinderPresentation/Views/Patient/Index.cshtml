@@ -1,0 +1,52 @@
+﻿@* @using DrugFinderMVC.Models
+@model IEnumerable<DrugFinder.ViewModels.RequestVM>
+
+@{
+    ViewData["Title"] = "Patient Dashboard";
+    Layout = "_Layout";
+}
+
+<section class="df-hero" style="padding:60px 0;">
+    <div class="container text-center">
+        <h1>Find Your Medicine</h1>
+        <p class="text-light mb-4">Search and request drugs بسهولة</p>
+
+        <a asp-controller="DrugRequest" asp-action="Create"
+           class="df-btn-primary px-4 py-3">
+            <i class="fa-solid fa-plus-circle me-2"></i>
+            New Request
+        </a>
+    </div>
+</section>
+
+<section class="section-steps">
+    <div class="container">
+
+        <div class="mb-5">
+            <span class="section-label">Your Activity</span>
+            <h2>Your Requests</h2>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var req in Model)
+            {
+                <div class="col-md-6">
+                    <div class="step-card">
+                        <h5>Request #@req.Id</h5>
+                        <p class="text-muted small">@req.CreatedAt</p>
+
+                        <ul>
+                            @foreach (var drug in req.Drugs)
+                            {
+                                <li>@drug.Name - @drug.Quantity</li>
+                            }
+                        </ul>
+
+                        <span class="badge bg-success">@req.Status</span>
+                    </div>
+                </div>
+            }
+        </div>
+
+    </div>
+</section> *@

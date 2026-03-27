@@ -37,6 +37,19 @@
                             </a>
                         </li>
                     }
+<<<<<<< HEAD
+=======
+                    @if (User.IsInRole("Pharmacy"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link notif-nav-link" asp-controller="Pharmacy" asp-action="Notifications"
+                               id="notifNavLink">
+                                <i class="fa-solid fa-bell me-1"></i>Notifications
+                                <span class="notif-nav-dot" id="notifNavDot" style="display:none;"></span>
+                            </a>
+                        </li>
+                    }
+>>>>>>> origin/Mostafa
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                             <i class="fa-solid fa-user-circle me-1"></i>

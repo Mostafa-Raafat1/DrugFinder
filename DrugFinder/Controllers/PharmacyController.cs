@@ -45,5 +45,19 @@ namespace DrugFinder.Controllers
             }
             return Ok(result.Value);
         }
+
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Pharmacy")]
+
+        [HttpGet("GetNearByDrugRequests")]
+        public async Task<IActionResult> GetNearByDrugRequests()
+        {
+            var result = await pharmacyService.GetNearbyRequestsAsync();
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+            return Ok(result.Value);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Domain.Enum;
+using Domain.ValueObject;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,17 +17,20 @@ namespace Domain.Entity
         public AvailabilityStatus AvailabilityStatus { get; private set; }
         public Money Price { get; private set; }
         public DateTime ResponseTime { get; private set; }
+        public List<PharmacyResponseItem> ResponseItems { get; private set; } // List of response items for each drug in the request 
+
 
         private PharmacyResponse() { } // For EF Core
 
-        public PharmacyResponse(int dRId, int PhId, AvailabilityStatus status, Money price)
+        public PharmacyResponse(int dRId, int PhId, List<PharmacyResponseItem> PRI)
         {
             Id = Guid.NewGuid();
             DrugRequestId = dRId;
             PharmacyId = PhId;
-            AvailabilityStatus = status;
-            Price = price;
             ResponseTime = DateTime.UtcNow;
+            ResponseItems = PRI;
+            setAvailabilityStatus(); // Set the availability status based on the response items
+            Price = new Money (ResponseItems.Sum(item => item.Price.Value), Currency.EGP); // Sum the prices of all response items to get the total price for the response
         }
 
         public void MarkAsUnavailable()
@@ -60,6 +64,22 @@ namespace Domain.Entity
         {
             DrugRequest = drugRequest;
             DrugRequestId = drugRequest.DBId;
+        }
+
+        private void setAvailabilityStatus()
+        {
+            if (ResponseItems.All (item => !item.Available))
+            {
+                AvailabilityStatus = AvailabilityStatus.Unavailable; // If all items are unavailable, mark the whole response as unavailable
+            }
+            else if (ResponseItems.Any(item => !item.Available))
+            {
+                AvailabilityStatus = AvailabilityStatus.PartiallyAvailable; // If at least one item is unavailable, but not all, mark the response as partially available
+            }
+            else
+            {
+                AvailabilityStatus = AvailabilityStatus.Available; // If all items are available, mark the response as available
+            }
         }
 
     }

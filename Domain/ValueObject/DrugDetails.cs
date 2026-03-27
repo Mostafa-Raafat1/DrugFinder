@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entity
 {
-    public class DrugDetails : ValueObject
+    public class DrugDetails : ValueObject_
     {
         public string DrugName { get; private set; }
         public string Strength { get; private set; }
