@@ -1,4 +1,8 @@
-<<<<<<< Updated upstream
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+
 namespace DrugFinderPresentation
 {
     public class Program
@@ -7,88 +11,75 @@ namespace DrugFinderPresentation
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Add services to the container
             builder.Services.AddControllersWithViews();
-=======
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
-var builder = WebApplication.CreateBuilder(args);
+            // Register IHttpContextAccessor (needed for Razor pages)
+            builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddControllersWithViews();
-
-// HttpClient for API calls
-builder.Services.AddHttpClient("DrugFinderAPI", client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5080");
-});
-
-// Cookie Authentication
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath     = "/Account/Login";
-        options.LogoutPath    = "/Account/Logout";
-        options.ExpireTimeSpan = TimeSpan.FromHours(1);
-        // Sliding expiration: each request within the hour resets the timer
-        options.SlidingExpiration = true;
-        // Validate the JWT claim is present on every request;
-        // if the cookie is stale (e.g. server restarted, session cleared)
-        // the user is signed out automatically instead of seeing phantom auth state.
-        options.Events = new CookieAuthenticationEvents
-        {
-            OnValidatePrincipal = async ctx =>
+            // HttpClient for API calls
+            builder.Services.AddHttpClient("DrugFinderAPI", client =>
             {
-                var token = ctx.Principal?.FindFirstValue(ClaimTypes.Hash);
-                if (string.IsNullOrEmpty(token))
-                {
-                    // Cookie exists but JWT is missing — reject it
-                    ctx.RejectPrincipal();
-                    await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                    return;
-                }
+                client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5080");
+            });
 
-                // Check the JWT expiry without calling the API
-                try
+            // Cookie Authentication
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
                 {
-                    var handler = new JwtSecurityTokenHandler();
-                    if (handler.CanReadToken(token))
+                    options.LoginPath = "/Account/Login";
+                    options.LogoutPath = "/Account/Logout";
+                    options.ExpireTimeSpan = TimeSpan.FromHours(1);
+                    options.SlidingExpiration = true;
+
+                    options.Events = new CookieAuthenticationEvents
                     {
-                        var jwt = handler.ReadJwtToken(token);
-                        if (jwt.ValidTo < DateTime.UtcNow)
+                        OnValidatePrincipal = async ctx =>
                         {
-                            // Token expired — sign out
-                            ctx.RejectPrincipal();
-                            await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                        }
-                    }
-                }
-                catch
-                {
-                    ctx.RejectPrincipal();
-                    await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                }
-            }
-        };
-    });
+                            var token = ctx.Principal?.FindFirstValue(ClaimTypes.Hash);
+                            if (string.IsNullOrEmpty(token))
+                            {
+                                ctx.RejectPrincipal();
+                                await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                                return;
+                            }
 
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout     = TimeSpan.FromHours(1);
-    options.Cookie.HttpOnly  = true;
-    options.Cookie.IsEssential = true;
-});
->>>>>>> Stashed changes
+                            try
+                            {
+                                var handler = new JwtSecurityTokenHandler();
+                                if (handler.CanReadToken(token))
+                                {
+                                    var jwt = handler.ReadJwtToken(token);
+                                    if (jwt.ValidTo < DateTime.UtcNow)
+                                    {
+                                        ctx.RejectPrincipal();
+                                        await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                ctx.RejectPrincipal();
+                                await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                            }
+                        }
+                    };
+                });
+
+            // Session
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromHours(1);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // Configure the HTTP request pipeline
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
@@ -97,7 +88,9 @@ builder.Services.AddSession(options =>
 
             app.UseRouting();
 
+            app.UseAuthentication(); // ✅ must come before UseAuthorization
             app.UseAuthorization();
+            app.UseSession();
 
             app.MapControllerRoute(
                 name: "default",
