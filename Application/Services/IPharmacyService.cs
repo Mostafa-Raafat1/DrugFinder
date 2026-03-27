@@ -1,10 +1,5 @@
 ﻿using Application.Common;
 using Application.DTO;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -12,5 +7,6 @@ namespace Application.Services
     {
         Task<Result> RegisterPharmacyAsync(RegisterPharmacyDTO pharmacyDTO);
         Task<Result<List<GetNotificationDTO>>> GetNotificationsForPharmacyAsync();
+        Task<Result<List<PharmacyRequestDTO>>> GetNearbyRequestsAsync();
     }
 }

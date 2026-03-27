@@ -14,6 +14,15 @@ namespace DrugFinderMVC.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
+<<<<<<< HEAD
+=======
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+>>>>>>> origin/Mostafa
         [HttpGet]
         public IActionResult Register()
         {
@@ -35,8 +44,13 @@ namespace DrugFinderMVC.Controllers
                 email = model.Email,
                 password = model.Password,
                 confirmPassword = model.ConfirmPassword,
+<<<<<<< HEAD
                 latitude = model.Latitude,
                 longitude = model.Longitude
+=======
+                latitude = model.Latitude!.Value,   // safe: Required ensures non-null here
+                longitude = model.Longitude!.Value
+>>>>>>> origin/Mostafa
             };
 
             var content = new StringContent(

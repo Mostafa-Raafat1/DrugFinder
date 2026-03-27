@@ -7,6 +7,7 @@ using Infrastructure.UnitOfWork;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -53,7 +54,7 @@ namespace Infrastructure.Services
                     drug.Quantity
                 ));
             }
-            var drugRequest = new DrugRequest(drugRequestDetails, patient.DBId, patient.Id);
+            var drugRequest = new DrugRequest(drugRequestDetails, patient.DBId, patient.Id, patient.Location, $"{patient.FName} {patient.SName}");
 
             uow.DrugRequest.Create(drugRequest);
 
@@ -66,6 +67,39 @@ namespace Infrastructure.Services
             {
                 return Result.Success();
             }
+        }
+
+        public async Task<Result<List<PatientRequestDto>>> GetDrugRequestsByPatientIdAsync()
+        {
+            var userAppId = userContext.UserId;
+            var patient = uow.Patient.getPatientByUserAppId(userAppId);
+            if (patient == null)
+            {
+                return Result<List<PatientRequestDto>>.Failure("Patient not found");
+            }
+
+            var drugRequests = await uow.DrugRequest.getDrugRequestsByPatientIdAsync(patient.DBId);
+            if (drugRequests == null || drugRequests.Count == 0)
+            {
+                return Result<List<PatientRequestDto>>.Failure("No drug requests found for this patient.");
+            }
+
+            // Map DrugRequest entities and Patient to PatientRequestDto
+            var patientRequestDtos = drugRequests.Select(dr => new PatientRequestDto
+            (
+                dr.DBId,
+                dr.RequestTime,
+                dr.Status.ToString(),
+                dr.DrugDetails.Select(dd => new DrugItemDTO
+                (
+                    dd.DrugName,
+                    dd.Strength,
+                    dd.Form.ToString(),
+                    dd.Quantity
+                )).ToList()
+            )).ToList();
+
+            return Result<List<PatientRequestDto>>.Success(patientRequestDtos);
         }
     }
 }

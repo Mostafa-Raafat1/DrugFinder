@@ -31,6 +31,38 @@ namespace Infrastructure.Services
             this.userContext = userContext;
         }
 
+        public async Task<Result<List<PharmacyRequestDTO>>> GetNearbyRequestsAsync()
+        {
+            var UserContextId = userContext.UserId;
+            var pharmacy = await uow.Pharmacy.GetPharmacyByUserIdAsync(UserContextId);
+            if (pharmacy == null)
+            {
+                return Result<List<PharmacyRequestDTO>>.Failure("Pharmacy not found");
+            }
+
+            var nearbyRequests = await uow.DrugRequest.GetNearbyDrugRequestsAsync(pharmacy.Location, 3000);
+            if(nearbyRequests == null || nearbyRequests.Count == 0)
+            {
+                return Result<List<PharmacyRequestDTO>>.Failure("No nearby drug requests found");
+            }
+            var requestDTOs = nearbyRequests.Select(r => new PharmacyRequestDTO
+            {
+                Id = r.DBId,
+                PatientName = r.PatientName,
+                CreatedAt = r.RequestTime,
+                DistanceKm = Math.Round(pharmacy.Location.CalculateDistance(r.Location) / 1000.0, 1), // get distance convert it Km and round to 1 decimal place
+                Drugs = r.DrugDetails.Select(d => new DrugItemDTO
+                (
+                    d.DrugName,
+                    d.Strength,
+                    d.Form.ToString(),
+                    d.Quantity
+                )).ToList()
+            }).ToList();
+
+            return Result<List<PharmacyRequestDTO>>.Success(requestDTOs);
+        }
+
         public async Task<Result<List<GetNotificationDTO>>> GetNotificationsForPharmacyAsync()
         {
             var pharmacy = await uow.Pharmacy.GetPharmacyByUserIdAsync(userContext.UserId);

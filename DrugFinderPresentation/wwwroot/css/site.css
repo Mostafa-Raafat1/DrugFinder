@@ -28,6 +28,13 @@
 html { scroll-behavior: smooth; }
 
 body {
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+  margin-bottom: 60px;
+}
+=======
+>>>>>>> origin/Mostafa
   font-family: 'DM Sans', sans-serif;
   background: var(--warm-white);
   color: var(--navy);
@@ -584,3 +591,23 @@ select.df-input { appearance: none; cursor: pointer;
   .hero-icon    { font-size: 5rem; }
   .df-hero { min-height: auto; padding: 5rem 0; }
 }
+<<<<<<< HEAD
+=======
+
+/* ── Navbar notification dot ────────────────────────────── */
+.notif-nav-link { position: relative; }
+.notif-nav-dot {
+  position: absolute;
+  top: 4px; right: 2px;
+  width: 8px; height: 8px;
+  background: var(--coral);
+  border-radius: 50%;
+  border: 2px solid var(--navy);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.35); }
+}
+>>>>>>> Stashed changes
+>>>>>>> origin/Mostafa

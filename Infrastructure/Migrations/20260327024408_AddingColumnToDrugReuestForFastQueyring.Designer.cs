@@ -4,6 +4,7 @@ using Infrastructure.Persistence.DbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 
@@ -12,9 +13,11 @@ using NetTopologySuite.Geometries;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260327024408_AddingColumnToDrugReuestForFastQueyring")]
+    partial class AddingColumnToDrugReuestForFastQueyring
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -510,6 +513,8 @@ namespace Infrastructure.Migrations
 
                             b1.HasKey("DrugRequestDBId");
 
+                            b1.HasIndex("Point");
+
                             b1.ToTable("DrugRequests");
 
                             b1.WithOwner()
@@ -631,47 +636,12 @@ namespace Infrastructure.Migrations
                                 .HasForeignKey("PharmacyResponseDBId");
                         });
 
-                    b.OwnsMany("Domain.ValueObject.PharmacyResponseItem", "ResponseItems", b1 =>
-                        {
-                            b1.Property<int>("PharmacyResponseDBId")
-                                .HasColumnType("int");
-
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("int");
-
-                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
-
-                            b1.Property<bool>("Available")
-                                .HasColumnType("bit")
-                                .HasColumnName("Available");
-
-                            b1.Property<string>("DrugName")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)")
-                                .HasColumnName("DrugName");
-
-                            b1.Property<decimal?>("Price")
-                                .IsRequired()
-                                .HasColumnType("decimal(18,2)")
-                                .HasColumnName("Price");
-
-                            b1.HasKey("PharmacyResponseDBId", "Id");
-
-                            b1.ToTable("PharmacyResponseItems", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("PharmacyResponseDBId");
-                        });
-
                     b.Navigation("DrugRequest");
 
                     b.Navigation("Pharmacy");
 
                     b.Navigation("Price")
                         .IsRequired();
-
-                    b.Navigation("ResponseItems");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
