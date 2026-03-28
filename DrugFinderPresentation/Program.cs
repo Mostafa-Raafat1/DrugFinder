@@ -11,19 +11,24 @@ namespace DrugFinderPresentation
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container
             builder.Services.AddControllersWithViews();
-
-            // Register IHttpContextAccessor (needed for Razor pages)
             builder.Services.AddHttpContextAccessor();
 
-            // HttpClient for API calls
             builder.Services.AddHttpClient("DrugFinderAPI", client =>
             {
-                client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5080");
+                client.BaseAddress = new Uri(
+                    builder.Configuration["ApiSettings:BaseUrl"]
+                    ?? "http://localhost:5080");
             });
 
-            // Cookie Authentication
+            // ✅ Session before Authentication
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromHours(1);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
+
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
@@ -36,47 +41,63 @@ namespace DrugFinderPresentation
                     {
                         OnValidatePrincipal = async ctx =>
                         {
-                            var token = ctx.Principal?.FindFirstValue(ClaimTypes.Hash);
+                            // Skip validation on login/logout to prevent loops
+                            var path = ctx.HttpContext.Request.Path;
+                            if (path.StartsWithSegments("/Account/Login") ||
+                                path.StartsWithSegments("/Account/Logout"))
+                                return;
+
+                            var token = ctx.Principal?.FindFirstValue("JwtToken");
+
                             if (string.IsNullOrEmpty(token))
                             {
                                 ctx.RejectPrincipal();
-                                await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                                await ctx.HttpContext.SignOutAsync(
+                                    CookieAuthenticationDefaults.AuthenticationScheme);
                                 return;
                             }
 
                             try
                             {
                                 var handler = new JwtSecurityTokenHandler();
-                                if (handler.CanReadToken(token))
+
+                                if (!handler.CanReadToken(token))
                                 {
-                                    var jwt = handler.ReadJwtToken(token);
-                                    if (jwt.ValidTo < DateTime.UtcNow)
-                                    {
-                                        ctx.RejectPrincipal();
-                                        await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                                    }
+                                    ctx.RejectPrincipal();
+                                    await ctx.HttpContext.SignOutAsync(
+                                        CookieAuthenticationDefaults.AuthenticationScheme);
+                                    return;
                                 }
+
+                                var jwt = handler.ReadJwtToken(token);
+
+                                if (jwt.ValidTo < DateTime.UtcNow)
+                                {
+                                    ctx.RejectPrincipal();
+                                    await ctx.HttpContext.SignOutAsync(
+                                        CookieAuthenticationDefaults.AuthenticationScheme);
+                                    return;
+                                }
+
+                                // ✅ Key fix: restore JWT into session from
+                                // the cookie claim after every restart
+                                var sessionToken = ctx.HttpContext.Session
+                                                      .GetString("JwtToken");
+                                if (string.IsNullOrEmpty(sessionToken))
+                                    ctx.HttpContext.Session.SetString("JwtToken", token);
                             }
                             catch
                             {
                                 ctx.RejectPrincipal();
-                                await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                                await ctx.HttpContext.SignOutAsync(
+                                    CookieAuthenticationDefaults.AuthenticationScheme);
                             }
                         }
                     };
                 });
 
-            // Session
-            builder.Services.AddSession(options =>
-            {
-                options.IdleTimeout = TimeSpan.FromHours(1);
-                options.Cookie.HttpOnly = true;
-                options.Cookie.IsEssential = true;
-            });
-
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -85,12 +106,10 @@ namespace DrugFinderPresentation
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
             app.UseRouting();
-
-            app.UseAuthentication(); // ✅ must come before UseAuthorization
-            app.UseAuthorization();
             app.UseSession();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapControllerRoute(
                 name: "default",

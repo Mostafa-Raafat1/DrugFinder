@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="~/css/site.css" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
 <nav class="navbar navbar-expand-lg df-navbar">
     <div class="container">
@@ -85,7 +85,36 @@
     </div>
 </nav>
 
-<main>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var banners = document.querySelectorAll('.alert-banner');
+            banners.forEach(function (banner) {
+                // Auto-dismiss after 4 seconds
+                var timer = setTimeout(function () {
+                    dismissBanner(banner);
+                }, 4000);
+
+                // Manual close button
+                var closeBtn = banner.querySelector('.btn-close');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function () {
+                        clearTimeout(timer);
+                        dismissBanner(banner);
+                    });
+                }
+            });
+        });
+
+        function dismissBanner(banner) {
+            banner.style.transition = 'opacity .35s ease, transform .35s ease';
+            banner.style.opacity    = '0';
+            banner.style.transform  = 'translateY(-8px)';
+            setTimeout(function () { banner.remove(); }, 350);
+        }
+    </script>
+
+<main class="flex-grow-1">
+
     @if (TempData["Success"] != null)
     {
         <div class="alert-banner alert-banner-success">
@@ -94,6 +123,7 @@
                 <span>@TempData["Success"]</span>
                 <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
             </div>
+            <div class="alert-banner-progress alert-banner-progress-success"></div>
         </div>
     }
     @if (TempData["Error"] != null)
@@ -104,9 +134,9 @@
                 <span>@TempData["Error"]</span>
                 <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
             </div>
+            <div class="alert-banner-progress alert-banner-progress-error"></div>
         </div>
     }
-
     @RenderBody()
 </main>
 

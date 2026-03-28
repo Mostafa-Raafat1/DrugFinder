@@ -1,0 +1,259 @@
+﻿@using DrugFinderMVC.Models
+@model RespondToRequestVM
+@{
+    ViewData["Title"] = "Respond to Request";
+    Layout = "_Layout";
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="validation-summary-errors mb-4">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <strong>Please fix the following errors:</strong>
+        </div>
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values
+           .SelectMany(v => v.Errors)
+           .Select(e => e.ErrorMessage)
+           .Where(m => !string.IsNullOrEmpty(m)))
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
+<section class="section-steps">
+    <div class="container-fluid px-4">
+
+        <div class="mb-4">
+            <span class="section-label">Pharmacy Panel</span>
+            <h2>Respond to Request</h2>
+            <p class="text-muted">Review drugs and set availability &amp; pricing for each item</p>
+        </div>
+
+        <form asp-action="Respond" asp-controller="Pharmacy" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="RequestId" />
+            <input type="hidden" asp-for="PatientName" />
+
+            <div class="respond-layout">
+
+                <!-- ── LEFT SIDEBAR ───────────────────────── -->
+                <div class="respond-sidebar">
+                    <div class="req-card h-100">
+
+                        @{
+                            var initials = string.Concat(
+                            Model.PatientName
+                            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                            .Take(2)
+                            .Select(w => w[0]));
+                        }
+
+                        <div class="avatar-wrap">
+                            <div class="patient-avatar">@initials</div>
+                            <div>
+                                <div class="patient-name">@Model.PatientName</div>
+                                <div class="patient-time">Request #@Model.RequestId</div>
+                            </div>
+                        </div>
+
+                        <div class="req-divider"></div>
+
+                        <div class="respond-sidebar-label">Requested Drugs</div>
+
+                        <ul class="drug-list">
+                            @foreach (var drug in Model.Items)
+                            {
+                                <li class="drug-row">
+                                    <div>
+                                        <div class="drug-name">@drug.DrugName</div>
+                                        <div class="drug-meta">
+                                            @if (!string.IsNullOrEmpty(drug.Strength))
+                                            {
+                                                @drug.Strength
+                                            }
+                                            @if (!string.IsNullOrEmpty(drug.Form))
+                                            {
+                                                <span>&nbsp;·&nbsp;@drug.Form</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <span class="drug-qty">×@drug.Quantity</span>
+                                </li>
+                            }
+                        </ul>
+
+                        <div class="req-divider"></div>
+
+                        <!-- Summary chips -->
+                        <div class="respond-sidebar-label mt-2">Live Summary</div>
+                        <div class="respond-summary-bar flex-column gap-2">
+                            <div class="respond-sum-chip">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="respond-sum-lbl mb-0">Available</span>
+                                    <span class="respond-sum-val text-teal" id="js-avail-count">0</span>
+                                </div>
+                            </div>
+                            <div class="respond-sum-chip">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="respond-sum-lbl mb-0">Unavailable</span>
+                                    <span class="respond-sum-val" style="color:var(--coral)" id="js-unavail-count">0</span>
+                                </div>
+                            </div>
+                            <div class="respond-sum-chip">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="respond-sum-lbl mb-0">Total Price</span>
+                                    <span class="respond-sum-val" id="js-total-price">EGP 0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ── RIGHT: RESPONSE FORM ───────────────── -->
+                <div class="respond-main">
+                    <div class="req-card">
+
+                        <div class="respond-card-heading">
+                            Your Response
+                            <span class="drug-item-num">
+                                @Model.Items.Count drug@(Model.Items.Count != 1 ? "s" : "")
+                            </span>
+                        </div>
+
+                        @for (int i = 0; i < Model.Items.Count; i++)
+                        {
+                            <div class="respond-drug-card" data-index="@i">
+                                <input type="hidden" asp-for="Items[i].DrugName" />
+
+                                <!-- Drug Header -->
+                                <div class="respond-dr-header">
+                                    <div class="respond-dr-name">@Model.Items[i].DrugName</div>
+                                    <div class="respond-dr-meta">
+                                        @if (!string.IsNullOrEmpty(Model.Items[i].Strength))
+                                        {
+                                            @Model.Items[i].Strength
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Items[i].Form))
+                                        {
+                                            <span>&nbsp;·&nbsp;@Model.Items[i].Form</span>
+                                        }
+                                        <span>&nbsp;·&nbsp;×@Model.Items[i].Quantity</span>
+                                    </div>
+                                </div>
+
+                                <!-- Availability Toggle -->
+                                <div class="respond-toggle-row">
+                                    <button type="button"
+                                            class="respond-toggle-btn"
+                                            onclick="setAvailability(this, @i, true)">
+                                        ✓ Available
+                                    </button>
+                                    <button type="button"
+                                            class="respond-toggle-btn"
+                                            onclick="setAvailability(this, @i, false)">
+                                        ✕ Not Available
+                                    </button>
+                                </div>
+
+                                <input type="hidden"
+                                       name="Items[@i].Available"
+                                       id="avail-hidden-@i"
+                                       value="false" />
+
+                                <!-- Price -->
+                                <div class="respond-price-row" id="price-row-@i">
+                                    <span class="respond-price-prefix">EGP</span>
+                                    <input type="number"
+                                           name="Items[@i].Price"
+                                           id="price-input-@i"
+                                           class="df-input respond-price-input"
+                                           placeholder="Enter price"
+                                           min="0"
+                                           step="0.01"
+                                           value=""
+                                           oninput="updateSummary()" />
+                                </div>
+
+                                <span asp-validation-for="Items[i].Price"
+                                      class="field-validation-error"></span>
+                            </div>
+                        }
+
+                        <!-- Actions -->
+                        <div class="respond-actions">
+                            <a asp-action="Index" asp-controller="Pharmacy"
+                               class="respond-btn-cancel">
+                                ← Cancel
+                            </a>
+                            <button type="submit" class="df-btn-submit respond-btn-submit">
+                                Send Response ✓
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var itemCount = @Model.Items.Count;
+
+                function setAvailability(btn, idx, isAvailable) {
+            var card = btn.closest('.respond-drug-card');
+            var btns = card.querySelectorAll('.respond-toggle-btn');
+
+            btns[0].classList.remove('respond-toggle-yes');
+            btns[1].classList.remove('respond-toggle-no');
+
+            if (isAvailable) {
+                btns[0].classList.add('respond-toggle-yes');
+            } else {
+                btns[1].classList.add('respond-toggle-no');
+            }
+
+            document.getElementById('avail-hidden-' + idx).value = isAvailable;
+
+            // show/hide
+            var priceRow = document.getElementById('price-row-' + idx);
+            var priceInput = document.getElementById('price-input-' + idx);
+
+            if (isAvailable) {
+                priceRow.style.display = 'flex';
+            } else {
+                priceRow.style.display = 'none';
+                priceInput.value = '';      // clear the value when hidden
+            }
+
+            updateSummary();
+        }
+
+        function updateSummary() {
+            var avail = 0, unavail = 0, total = 0;
+
+            for (var i = 0; i < itemCount; i++) {
+                var isAvail = document.getElementById('avail-hidden-' + i).value === 'true';
+                if (isAvail) {
+                    avail++;
+                    var val = parseFloat(document.getElementById('price-input-' + i).value) || 0;
+                    total += val;
+                } else {
+                    unavail++;
+                }
+            }
+
+            document.getElementById('js-avail-count').textContent    = avail;
+            document.getElementById('js-unavail-count').textContent  = unavail;
+            document.getElementById('js-total-price').textContent    = 'EGP ' + total.toFixed(2);
+        }
+    </script>
+}

@@ -20,19 +20,20 @@ namespace DrugFinderMVC.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
         [Authorize(Roles = "Pharmacy")]
-        // ── Registration ─────────────────────────────────────────
         public async Task<IActionResult> Index()
         {
+            // ✅ Session is guaranteed to have the token because
+            // OnValidatePrincipal restores it on every authenticated request
             var token = HttpContext.Session.GetString("JwtToken");
 
+            // This should now never happen, but keep as a safety net
             if (string.IsNullOrEmpty(token))
                 return RedirectToAction("Login", "Account");
 
             var client = _httpClientFactory.CreateClient();
-
             client.BaseAddress = new Uri("http://localhost:5080/");
             client.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                new AuthenticationHeaderValue("Bearer", token);
 
             var response = await client.GetAsync("api/Pharmacy/GetNearByDrugRequests");
 
@@ -43,12 +44,7 @@ namespace DrugFinderMVC.Controllers
             }
 
             var json = await response.Content.ReadAsStringAsync();
-
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var vm = JsonSerializer.Deserialize<List<RequestVM>>(json, options)
                      ?? new List<RequestVM>();
 
@@ -131,8 +127,121 @@ namespace DrugFinderMVC.Controllers
             return View(notifications);
         }
 
-        // ── AJAX: mark single notification read (future-proof) ────
-        // Called by notifications.js via $.ajax — no new API endpoint needed;
-        // the unread dot is just toggled client-side for now.
+        // ── Response ─────────────────────────────────────────
+
+        [Authorize(Roles = "Pharmacy")]
+        [HttpGet]
+        public async Task<IActionResult> Respond(int id)
+        {
+            var token = HttpContext.Session.GetString("JwtToken");
+            if (string.IsNullOrEmpty(token))
+                return RedirectToAction("Login", "Account");
+
+            // Fetch the original request so we can pre-populate drug names in the form
+            var client = _httpClientFactory.CreateClient();
+            client.BaseAddress = new Uri("http://localhost:5080/");
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            var requestResponse = await client.GetAsync($"api/Pharmacy/GetNearByDrugRequests");
+
+            List<RequestVM> allRequests = new();
+
+            if (requestResponse.IsSuccessStatusCode)
+            {
+                var json = await requestResponse.Content.ReadAsStringAsync();
+                allRequests = JsonSerializer.Deserialize<List<RequestVM>>(json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new();
+            }
+
+            var request = allRequests.FirstOrDefault(r => r.Id == id);
+
+            if (request == null)
+            {
+                TempData["Error"] = "Request not found.";
+                return RedirectToAction("Index");
+            }
+
+            // Build the ViewModel pre-filled with drug names from the original request
+            var vm = new RespondToRequestVM
+            {
+                RequestId = id,
+                PatientName = request.PatientName,
+                Items = request.Drugs.Select(d => new RespondItemVM
+                {
+                    DrugName = d.Name,
+                    Strength = d.Strength,   
+                    Form = d.Form,       
+                    Quantity = d.Quantity,   
+                    Available = false,
+                    Price = null
+                }).ToList()
+            };
+
+            return View(vm);
+        }
+
+        [Authorize(Roles = "Pharmacy")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Respond(RespondToRequestVM model)
+        {
+
+            for (int i = 0; i < model.Items.Count; i++)
+            {
+                if (model.Items[i].Available && model.Items[i].Price == null)
+                {
+                    ModelState.AddModelError(
+                        $"Items[{i}].Price",
+                        $"Please enter a price for {model.Items[i].DrugName}.");
+                }
+            }
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var token = HttpContext.Session.GetString("JwtToken");
+            if (string.IsNullOrEmpty(token))
+                return RedirectToAction("Login", "Account");
+
+            var client = _httpClientFactory.CreateClient();
+            client.BaseAddress = new Uri("http://localhost:5080/");
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            var payload = new
+            {
+                requestId = model.RequestId,
+                respondedAt = DateTime.UtcNow,
+                items = model.Items.Select(i => new
+                {
+                    drugName = i.DrugName,
+                    available = i.Available,
+                    price = i.Price
+                })
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await client.PostAsync(
+                "api/PharmacyResponse/CreatePharmacyResponse", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["Success"] = $"Response for {model.PatientName} sent successfully!";
+                return RedirectToAction("Index");
+            }
+
+            var error = await response.Content.ReadAsStringAsync();
+            ModelState.AddModelError("", string.IsNullOrWhiteSpace(error)
+                ? "Failed to submit response. Please try again."
+                : error);
+
+            return View(model);
+        }
     }
 }

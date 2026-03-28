@@ -81,6 +81,29 @@ namespace DrugFinderMVC.Models
         public double? Longitude { get; set; }
     }
 
+    // Maps to PharmacyResponseDTO on the API side
+    public class RespondToRequestVM
+    {
+        public int RequestId { get; set; }
+        public string PatientName { get; set; } = string.Empty;   // display only, not sent to API
+        public List<RespondItemVM> Items { get; set; } = new();
+    }
+
+    public class RespondItemVM
+    {
+        [Required]
+        public string DrugName { get; set; } = string.Empty;
+
+        // ✅ Added — needed for sidebar & form card display
+        public string? Strength { get; set; }
+        public string? Form { get; set; }
+        public int Quantity { get; set; }
+
+        public bool Available { get; set; }
+        public decimal? Price { get; set; }
+    }
+
+
     // ── Drug Request ──────────────────────────────────────────
     public class DrugDetailViewModel
     {

@@ -29,9 +29,14 @@ namespace Domain.Entity
             PharmacyId = PhId;
             ResponseTime = DateTime.UtcNow;
             ResponseItems = PRI;
-            setAvailabilityStatus(); // Set the availability status based on the response items
-            Price = new Money (ResponseItems.Sum(item => item.Price.Value), Currency.EGP); // Sum the prices of all response items to get the total price for the response
-        }
+            setAvailabilityStatus();
+
+            var total = ResponseItems
+                        .Where(item => item.Price != null)
+                        .Sum(item => item.Price!.Value); // Use ! if Price is nullable but we filtered nulls
+
+            Price = new Money(total, Currency.EGP);
+        }     
 
         public void MarkAsUnavailable()
         {

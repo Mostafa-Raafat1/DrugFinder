@@ -1,6 +1,7 @@
 using DrugFinderMVC.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Text;
@@ -17,10 +18,10 @@ namespace DrugFinderMVC.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
-            // If already properly authenticated redirect away
             if (User.Identity?.IsAuthenticated == true)
                 return RedirectToAction("Index", "Home");
 
@@ -28,6 +29,7 @@ namespace DrugFinderMVC.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
@@ -48,10 +50,6 @@ namespace DrugFinderMVC.Controllers
             var token = await response.Content.ReadAsStringAsync();
             token = token.Trim('"');
 
-            // Store token in session for use by API calls
-            HttpContext.Session.SetString("JwtToken", token);
-
-            // Parse JWT payload to build claims principal
             var parts = token.Split('.');
             if (parts.Length != 3)
             {
@@ -63,15 +61,12 @@ namespace DrugFinderMVC.Controllers
             payload += new string('=', (4 - payload.Length % 4) % 4);
             var json = Encoding.UTF8.GetString(Convert.FromBase64String(payload));
 
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Hash, token)
-            };
+            var claims = new List<Claim> { new Claim("JwtToken", token) };
 
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            // Email claim (ASP.NET Identity uses the long URI form)
+            // Email
             if (root.TryGetProperty("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", out var ep))
                 claims.Add(new Claim(ClaimTypes.Email, ep.GetString() ?? ""));
             else if (root.TryGetProperty("email", out var ep2))
@@ -83,7 +78,7 @@ namespace DrugFinderMVC.Controllers
             else if (root.TryGetProperty("nameid", out var np2))
                 claims.Add(new Claim(ClaimTypes.NameIdentifier, np2.GetString() ?? ""));
 
-            // Roles — try both short and long claim URI forms
+            // Roles
             void AddRoleClaims(JsonElement elem)
             {
                 if (elem.ValueKind == JsonValueKind.Array)
@@ -98,15 +93,13 @@ namespace DrugFinderMVC.Controllers
             else if (root.TryGetProperty("role", out var rp2))
                 AddRoleClaims(rp2);
 
-            var identity  = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
 
-            // IsPersistent = true writes a real expiry on the cookie so
-            // it cannot survive beyond ExpireTimeSpan even after a browser restart.
             var authProps = new AuthenticationProperties
             {
                 IsPersistent = true,
-                ExpiresUtc   = DateTimeOffset.UtcNow.AddHours(1)
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
             };
 
             await HttpContext.SignInAsync(
@@ -114,10 +107,9 @@ namespace DrugFinderMVC.Controllers
                 principal,
                 authProps);
 
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                return Redirect(returnUrl);
+            // ✅ Must come after SignInAsync so the session is initialised
+            HttpContext.Session.SetString("JwtToken", token);
 
-            // use principal (NOT User)
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 

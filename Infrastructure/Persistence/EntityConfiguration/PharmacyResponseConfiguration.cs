@@ -62,7 +62,7 @@ namespace Infrastructure.Persistence.EntityConfiguration
 
                 pr.Property(r => r.DrugName).HasColumnName("DrugName").IsRequired();
                 pr.Property(r => r.Available).HasColumnName("Available").IsRequired();
-                pr.Property(r => r.Price).HasColumnName("Price").IsRequired();
+                pr.Property(r => r.Price).HasColumnName("Price");
             });
 
             // Configure the AvailabilityStatus as an enum integer
